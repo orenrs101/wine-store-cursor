@@ -1,0 +1,197 @@
+---
+description: Best practices and coding standards for this project
+globs: src/**/*
+alwaysApply: true
+---
+# Best Practices
+
+This document outlines the best practices and coding standards to follow in this project.
+
+## 1. Clean and Clear Code
+
+- Write self-documenting code with descriptive variable and function names
+- Keep functions focused on a single responsibility
+- Use consistent formatting and indentation
+- Limit line length to 80-100 characters
+- Add comments only for complex logic (code should be self-explanatory)
+
+```typescript
+// Good
+function calculateTotalPrice(items: CartItem[]): number {
+  return items.reduce((total, item) => total + item.price * item.quantity, 0);
+}
+
+// Bad
+function calc(i: any[]): number {
+  return i.reduce((t, x) => t + x.p * x.q, 0);
+}
+```
+
+## 2. Write Unit Tests for Each Function
+
+- Every meaningful function should have corresponding unit tests
+- Tests should cover success cases, edge cases, and error handling
+- Organize tests to mirror the structure of your source code
+- Use descriptive test names that explain the expected behavior
+
+```typescript
+// Example test structure
+describe('calculateTotalPrice', () => {
+  it('should return 0 for empty cart', () => {
+    expect(calculateTotalPrice([])).toBe(0);
+  });
+
+  it('should correctly calculate total for multiple items', () => {
+    const items = [
+      { name: 'Wine A', price: 25, quantity: 2 },
+      { name: 'Wine B', price: 30, quantity: 1 }
+    ];
+    expect(calculateTotalPrice(items)).toBe(80);
+  });
+});
+```
+
+## 3. DRY - Don't Repeat Yourself
+
+- Extract repeated code into reusable functions, components, or hooks
+- Create utility functions for common operations
+- Use constants for repeated values
+- Leverage composition to avoid duplicating component logic
+
+```typescript
+// Good
+function formatCurrency(amount: number): string {
+  return `$${amount.toFixed(2)}`;
+}
+
+// Use throughout the application
+<p>Price: {formatCurrency(product.price)}</p>
+<p>Total: {formatCurrency(totalAmount)}</p>
+
+// Bad
+<p>Price: ${product.price.toFixed(2)}</p>
+<p>Total: ${totalAmount.toFixed(2)}</p>
+```
+
+## 4. Keep React UI Components Minimal
+
+- Break down complex components into smaller, focused ones
+- Follow a hierarchical component structure
+- Limit component responsibilities
+- Extract repeated UI patterns into reusable components
+
+```typescript
+// Good
+function WineTable({ wines }) {
+  return (
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableCell>Name</TableCell>
+          <TableCell>Year</TableCell>
+          <TableCell>Price</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {wines.map(wine => (
+          <WineTableRow key={wine.id} wine={wine} />
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+function WineTableRow({ wine }) {
+  return (
+    <TableRow>
+      <TableCell>{wine.name}</TableCell>
+      <TableCell>{wine.year}</TableCell>
+      <TableCell>{formatCurrency(wine.price)}</TableCell>
+    </TableRow>
+  );
+}
+```
+
+## 5. Separate UI and Logic
+
+- Use custom hooks to encapsulate business logic
+- Keep components focused on presentation
+- Implement container/presenter pattern where appropriate
+- Use React Context or state management for complex state
+
+```typescript
+// Logic separated into custom hook
+function useWineData() {
+  const [wines, setWines] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchWines() {
+      try {
+        setLoading(true);
+        const data = await wineService.getWines();
+        setWines(data);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchWines();
+  }, []);
+
+  return { wines, loading, error };
+}
+
+// UI component using the hook
+function WineListing() {
+  const { wines, loading, error } = useWineData();
+
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage message={error.message} />;
+
+  return <WineTable wines={wines} />;
+}
+```
+
+## 6. Use Async/Await Over Then/Catch
+
+- Prefer async/await for asynchronous operations
+- Handle errors with try/catch blocks
+- Keep async functions focused and atomic
+- Avoid mixing async/await with .then/.catch chains
+
+```typescript
+// Good
+async function fetchWineDetails(id: string) {
+  try {
+    const response = await fetch(`/api/wines/${id}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch wine details');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching wine details:', error);
+    throw error;
+  }
+}
+
+// Bad
+function fetchWineDetails(id: string) {
+  return fetch(`/api/wines/${id}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to fetch wine details');
+      }
+      return response.json();
+    })
+    .then(data => {
+      return data;
+    })
+    .catch(error => {
+      console.error('Error fetching wine details:', error);
+      throw error;
+    });
+}
+```

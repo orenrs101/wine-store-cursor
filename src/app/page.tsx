@@ -1,95 +1,142 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
+
+import {
+  Box,
+  Heading,
+  Container,
+  Text,
+  Stack,
+  SimpleGrid,
+  VStack,
+  Center,
+  Alert,
+  AlertIcon,
+  Flex
+} from '@chakra-ui/react'
+import { useState, useMemo, useEffect } from 'react'
+import { WineCard } from './components/WineCard'
+import { Header } from './components/Header'
+import { FilterOptions } from './components/FilterBar'
+import { wines } from './data/wines'
+import { SearchBar } from './components/SearchBar'
+import { FilterBar } from './components/FilterBar'
+
+// Helper function to normalize text for better Hebrew search
+const normalizeText = (text: string): string => {
+  return text
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, ''); // Remove diacritics
+};
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<FilterOptions>({
+    wineType: [],
+    wineries: [],
+    priceRange: [
+      Math.min(...wines.map(wine => wine.price)),
+      Math.max(...wines.map(wine => wine.price))
+    ]
+  });
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const filteredWines = useMemo(() => {
+    // Start with all wines
+    let result = wines;
+    
+    // Apply text search if there is a search term
+    if (searchTerm.trim()) {
+      const term = normalizeText(searchTerm);
+      result = result.filter(wine => 
+        normalizeText(wine.name).includes(term) || 
+        normalizeText(wine.winery).includes(term)
+      );
+    }
+    
+    // Apply wine type filter
+    if (filters.wineType.length > 0) {
+      result = result.filter(wine => filters.wineType.includes(wine.type));
+    }
+    
+    // Apply winery filter
+    if (filters.wineries.length > 0) {
+      result = result.filter(wine => filters.wineries.includes(wine.winery));
+    }
+    
+    // Apply price range filter
+    result = result.filter(wine => 
+      wine.price >= filters.priceRange[0] && 
+      wine.price <= filters.priceRange[1]
+    );
+    
+    return result;
+  }, [searchTerm, filters]);
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
+
+  const handleFilterChange = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
+  };
+
+  // Check if any filters are active
+  const isFiltered = filters.wineType.length > 0 || 
+                     filters.wineries.length > 0 || 
+                     (filters.priceRange[0] > Math.min(...wines.map(w => w.price)) || 
+                      filters.priceRange[1] < Math.max(...wines.map(w => w.price)));
+
+  return (
+    <>
+      <Header />
+      <Box width="100%" maxWidth="1600px" mx="auto" py={8}>
+
+        {/* Search and filter section */}
+        <Box 
+          mb={20}
+          px={{ base: 4, md: 6, lg: 8 }}
+          width="100%"
+        >
+          <Flex 
+            direction={{ base: 'column', md: 'row' }} 
+            gap={{ base: 4, md: 4 }}
+            align="center"
+            justify="space-between"
+            width="100%"
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+            <Box width={{ base: '100%', md: '40%' }}>
+              <SearchBar onSearch={handleSearch} />
+            </Box>
+            
+            <Box width={{ base: '100%', md: '58%' }}>
+              <FilterBar wines={wines} onFilterChange={handleFilterChange} />
+            </Box>
+          </Flex>
+        </Box>
+
+        <Box px={{ base: 4, md: 6, lg: 8 }} width="100%">
+          {filteredWines.length > 0 ? (
+            <SimpleGrid 
+              columns={{ base: 1, sm: 2, md: 3, lg: 4, xl: 5 }} 
+              spacing={8}
+              width="100%"
+              justifyContent="center"
+            >
+              {filteredWines.map((wine) => (
+                <WineCard key={wine.id} wine={wine} />
+              ))}
+            </SimpleGrid>
+          ) : (
+            <Center py={10}>
+              <Alert status="info" borderRadius="md" width="fit-content">
+                <AlertIcon />
+                לא נמצאו יינות מתאימים לחיפוש
+              </Alert>
+            </Center>
+          )}
+        </Box>
+      </Box>
+    </>
+  )
 }

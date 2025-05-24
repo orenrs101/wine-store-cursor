@@ -1,0 +1,70 @@
+---
+description: Description of the project tech stack and development guidelines
+globs: src/**/*
+alwaysApply: false
+---
+# Tech Stack
+
+This project uses the following technologies:
+
+## Core Technologies
+
+- **Next.js 15.3.1**: React framework with App Router architecture
+- **React 19**: JavaScript UI library
+- **TypeScript 5+**: Static type checking
+- **CSS Modules**: For component-scoped styling
+
+## Development Environment
+
+- **ESLint 9**: Code linting with Next.js configuration
+- **Turbopack**: Used for local development server
+
+## Project Structure
+
+```
+cursor-wine-site/
+├── .next/              # Next.js build output
+├── node_modules/       # Dependencies
+├── public/             # Static assets
+├── src/                # Source code
+│   └── app/            # App Router based structure
+│       ├── globals.css # Global styles
+│       ├── layout.tsx  # Root layout
+│       ├── page.tsx    # Home page
+│       └── page.module.css # Component-specific styles
+├── .cursor/            # Cursor AI assistant configuration
+├── package.json        # Project dependencies and scripts
+└── tsconfig.json       # TypeScript configuration
+```
+
+## Styling Approach
+
+This project uses CSS Modules for component-specific styling, with global styles defined in `src/app/globals.css`.
+
+## Build and Deployment
+
+Use these commands for development and deployment:
+
+```bash
+# Start local development server with Turbopack
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm run start
+
+# Run linting
+npm run lint
+```
+
+## Import Conventions
+
+```typescript
+// Importing Next.js components
+import Image from "next/image";
+
+// Importing CSS modules
+import styles from "./component.module.css";
+```
