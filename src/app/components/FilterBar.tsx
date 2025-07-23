@@ -36,7 +36,7 @@ import {
   useDisclosure
 } from '@chakra-ui/react'
 import { useState, useEffect, useMemo } from 'react'
-import { Wine } from '../data/wines'
+import { Wine } from '../../types/wine'
 
 // Chevron down icon component
 const ChevronDownIcon = (props: any) => (
@@ -124,8 +124,8 @@ export function FilterBar({ wines, onFilterChange }: FilterBarProps) {
   // Calculate counts for each filter option
   const wineTypeCounts = useMemo(() => {
     const counts = {
-      red: wines.filter(wine => wine.type === 'red').length,
-      white: wines.filter(wine => wine.type === 'white').length
+      red: wines.filter(wine => wine.type === 'RED').length,
+      white: wines.filter(wine => wine.type === 'WHITE').length
     };
     return counts;
   }, [wines]);

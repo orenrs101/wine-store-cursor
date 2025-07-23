@@ -18,7 +18,7 @@ import {
 } from '@chakra-ui/react'
 import NextLink from 'next/link'
 import { useCart } from '../context/CartContext'
-import { Wine } from '../data/wines'
+import { Wine } from '../../types/wine'
 
 interface WineCardProps {
   wine: Wine;
@@ -27,7 +27,7 @@ interface WineCardProps {
 export function WineCard({ wine }: WineCardProps) {
   const { addToCart } = useCart();
   const toast = useToast();
-  const typeText = wine.type === 'red' ? 'אדום' : 'לבן';
+  const typeText = wine.type === 'RED' ? 'אדום' : 'לבן';
   
   // Color mode values
   const cardBg = useColorModeValue('white', 'black');
@@ -81,7 +81,7 @@ export function WineCard({ wine }: WineCardProps) {
             position="absolute" 
             top="2" 
             left="2" 
-            colorScheme={wine.type === 'red' ? 'red' : 'yellow'} 
+            colorScheme={wine.type === 'RED' ? 'red' : 'yellow'} 
             px="2" 
             py="1" 
             borderRadius="full"

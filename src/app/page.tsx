@@ -11,15 +11,17 @@ import {
   Center,
   Alert,
   AlertIcon,
-  Flex
+  Flex,
+  Spinner
 } from '@chakra-ui/react'
 import { useState, useMemo, useEffect } from 'react'
 import { WineCard } from './components/WineCard'
 import { Header } from './components/Header'
 import { FilterOptions } from './components/FilterBar'
-import { wines } from './data/wines'
 import { SearchBar } from './components/SearchBar'
 import { FilterBar } from './components/FilterBar'
+import { fetchWines } from '../lib/api'
+import { Wine } from '../types/wine'
 
 // Helper function to normalize text for better Hebrew search
 const normalizeText = (text: string): string => {
@@ -31,15 +33,43 @@ const normalizeText = (text: string): string => {
 };
 
 export default function Home() {
+  const [wines, setWines] = useState<Wine[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({
     wineType: [],
     wineries: [],
-    priceRange: [
-      Math.min(...wines.map(wine => wine.price)),
-      Math.max(...wines.map(wine => wine.price))
-    ]
+    priceRange: [0, 1000] // Default range, will be updated when wines load
   });
+
+  // Fetch wines from API
+  useEffect(() => {
+    async function loadWines() {
+      try {
+        setLoading(true);
+        const fetchedWines = await fetchWines();
+        setWines(fetchedWines);
+        
+        // Update price range based on fetched data
+        if (fetchedWines.length > 0) {
+          const minPrice = Math.min(...fetchedWines.map(wine => wine.price));
+          const maxPrice = Math.max(...fetchedWines.map(wine => wine.price));
+          setFilters(prev => ({
+            ...prev,
+            priceRange: [minPrice, maxPrice]
+          }));
+        }
+      } catch (err) {
+        setError('Failed to load wines. Please try again later.');
+        console.error('Error loading wines:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadWines();
+  }, []);
 
   const filteredWines = useMemo(() => {
     // Start with all wines
@@ -54,9 +84,12 @@ export default function Home() {
       );
     }
     
-    // Apply wine type filter
+    // Apply wine type filter - convert database enum to filter format
     if (filters.wineType.length > 0) {
-      result = result.filter(wine => filters.wineType.includes(wine.type));
+      result = result.filter(wine => {
+        const wineTypeForFilter = wine.type === 'RED' ? 'red' : 'white';
+        return filters.wineType.includes(wineTypeForFilter);
+      });
     }
     
     // Apply winery filter
@@ -71,7 +104,7 @@ export default function Home() {
     );
     
     return result;
-  }, [searchTerm, filters]);
+  }, [wines, searchTerm, filters]);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -80,12 +113,6 @@ export default function Home() {
   const handleFilterChange = (newFilters: FilterOptions) => {
     setFilters(newFilters);
   };
-
-  // Check if any filters are active
-  const isFiltered = filters.wineType.length > 0 || 
-                     filters.wineries.length > 0 || 
-                     (filters.priceRange[0] > Math.min(...wines.map(w => w.price)) || 
-                      filters.priceRange[1] < Math.max(...wines.map(w => w.price)));
 
   return (
     <>
@@ -116,7 +143,18 @@ export default function Home() {
         </Box>
 
         <Box px={{ base: 4, md: 6, lg: 8 }} width="100%">
-          {filteredWines.length > 0 ? (
+          {loading ? (
+            <Center py={20}>
+              <Spinner size="xl" color="red.500" />
+            </Center>
+          ) : error ? (
+            <Center py={10}>
+              <Alert status="error" borderRadius="md" width="fit-content">
+                <AlertIcon />
+                {error}
+              </Alert>
+            </Center>
+          ) : filteredWines.length > 0 ? (
             <SimpleGrid 
               columns={{ base: 1, sm: 2, md: 3, lg: 4, xl: 5 }} 
               spacing={8}

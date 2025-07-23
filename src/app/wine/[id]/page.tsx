@@ -22,7 +22,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Header } from '../../components/Header'
 import { useCart } from '../../context/CartContext'
-import { wines, Wine } from '../../data/wines'
+import { Wine } from '../../../types/wine'
+import { fetchWineById } from '../../../lib/api'
 
 export default function WineDetailsPage() {
   const params = useParams()
@@ -34,15 +35,21 @@ export default function WineDetailsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Find wine by ID from our data
-    const id = parseInt(params.id as string)
-    const foundWine = wines.find(w => w.id === id)
-    
-    if (foundWine) {
-      setWine(foundWine)
+    async function loadWine() {
+      try {
+        setLoading(true)
+        const id = params.id as string
+        const foundWine = await fetchWineById(id)
+        setWine(foundWine)
+      } catch (error) {
+        console.error('Error loading wine:', error)
+        setWine(null)
+      } finally {
+        setLoading(false)
+      }
     }
-    
-    setLoading(false)
+
+    loadWine()
   }, [params.id])
 
   // If wine not found, show error and return to home
@@ -83,7 +90,7 @@ export default function WineDetailsPage() {
   }
 
   // Get type in Hebrew
-  const wineTypeHebrew = wine.type === 'red' ? 'אדום' : 'לבן'
+  const wineTypeHebrew = wine.type === 'RED' ? 'אדום' : 'לבן'
 
   return (
     <>
@@ -107,7 +114,7 @@ export default function WineDetailsPage() {
           <VStack spacing={6} align="stretch" textAlign="right">
             <Box>
               <Badge 
-                colorScheme={wine.type === 'red' ? 'red' : 'yellow'} 
+                colorScheme={wine.type === 'RED' ? 'red' : 'yellow'} 
                 fontSize="md" 
                 px={2} 
                 py={1} 

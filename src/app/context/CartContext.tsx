@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, ReactNode } from 'react'
-import { Wine } from '../data/wines'
+import { Wine } from '../../types/wine'
 
 interface CartItem extends Wine {
   quantity: number
@@ -10,8 +10,8 @@ interface CartItem extends Wine {
 interface CartContextType {
   items: CartItem[]
   addToCart: (wine: Wine) => void
-  removeFromCart: (wineId: number) => void
-  updateQuantity: (wineId: number, quantity: number) => void
+  removeFromCart: (wineId: string) => void
+  updateQuantity: (wineId: string, quantity: number) => void
   cartCount: number
   cartTotal: number
 }
@@ -40,11 +40,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const removeFromCart = (wineId: number) => {
+  const removeFromCart = (wineId: string) => {
     setItems(prevItems => prevItems.filter(item => item.id !== wineId))
   }
 
-  const updateQuantity = (wineId: number, quantity: number) => {
+  const updateQuantity = (wineId: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(wineId)
       return

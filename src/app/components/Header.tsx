@@ -72,6 +72,11 @@ export function Header() {
           </NextLink>
           
           <HStack spacing={3}>
+            <NextLink href="/admin" passHref>
+              <Link fontSize="sm" color="gray.600" _hover={{ color: "red.500" }}>
+                ניהול
+              </Link>
+            </NextLink>
             <IconButton
               aria-label={colorMode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
               icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
